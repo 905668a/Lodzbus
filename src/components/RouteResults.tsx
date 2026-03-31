@@ -36,10 +36,10 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 const RECENT_PAST_WINDOW_MS = 10 * 60 * 1000;
 const RECENT_PAST_VISIBLE_MS = 5 * 60 * 1000;
 const VALID_LATE_MARGIN_MS = 3 * 60 * 1000;
+const MAX_DEPARTURE_MINS = 30;
 const STUDENT_DEPOT_ORIGIN_ADDRESS = "Student Depot Łódź, Stanisława Wigury 7 B, 90-301 Łódź";
 const ONE_MINUTE_MS = 60 * 1000;
 const DUPLICATE_ROUTE_WINDOW_MS = 5 * 60 * 1000;
-const MAX_WALK_TO_TIME_MINUTES = 15;
 
 interface RouteResultsProps {
   routeData: RouteData;
@@ -372,11 +372,6 @@ export default function RouteResults({ routeData, onBack }: RouteResultsProps) {
       const walkFromTime = walking?.walkFromTime ?? (option.walkFromStop.distance ? calculateWalkingTime(option.walkFromStop.distance) : 0);
       const totalTime = walkToTime + transportTime + walkFromTime;
 
-      // Skip routes that require too much walking to the stop
-      if (walkToTime > MAX_WALK_TO_TIME_MINUTES) {
-        continue;
-      }
-
       const key = bucketKey(option.line, option.departureStopId);
       const bucket = departureBuckets[key];
       const lineDepartures = (bucket?.departures || []).filter((dep) => matchesLine(option.line, dep));
@@ -480,21 +475,26 @@ export default function RouteResults({ routeData, onBack }: RouteResultsProps) {
   );
 
   const sortedUpcomingOptions = dedupeOptions(
-    [...upcomingOptions].sort((a, b) => {
-      const arrivalDiff = a.arrivalTime.getTime() - b.arrivalTime.getTime();
+    [...upcomingOptions]
+      .filter((option) => {
+        const minsToLeave = (option.departureTime.getTime() - currentTime.getTime()) / 60000;
+        return minsToLeave <= MAX_DEPARTURE_MINS;
+      })
+      .sort((a, b) => {
+        const arrivalDiff = a.arrivalTime.getTime() - b.arrivalTime.getTime();
 
-      if (Math.abs(arrivalDiff) <= ONE_MINUTE_MS) {
+        if (Math.abs(arrivalDiff) <= ONE_MINUTE_MS) {
+          const walkingDiff = (a.walkToTime + a.walkFromTime) - (b.walkToTime + b.walkFromTime);
+          if (walkingDiff !== 0) return walkingDiff;
+        }
+
+        if (arrivalDiff !== 0) return arrivalDiff;
+
         const walkingDiff = (a.walkToTime + a.walkFromTime) - (b.walkToTime + b.walkFromTime);
         if (walkingDiff !== 0) return walkingDiff;
-      }
 
-      if (arrivalDiff !== 0) return arrivalDiff;
-
-      const walkingDiff = (a.walkToTime + a.walkFromTime) - (b.walkToTime + b.walkFromTime);
-      if (walkingDiff !== 0) return walkingDiff;
-
-      return a.departureTime.getTime() - b.departureTime.getTime();
-    })
+        return a.departureTime.getTime() - b.departureTime.getTime();
+      })
   );
 
   const sortedNearRecentPastOptions = dedupePastByRoute(
