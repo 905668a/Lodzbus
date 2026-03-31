@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ExternalLink, Plus, Search, Trash2 } from "lucide-react";
+import { ArrowLeft, ChevronDown, ExternalLink, Search, Trash2 } from "lucide-react";
 
 interface TeAmoProps {
   onBack: () => void;
@@ -51,11 +51,11 @@ export default function TeAmo({ onBack }: TeAmoProps) {
   const [titleInput, setTitleInput] = useState("");
   const [noteInput, setNoteInput] = useState("");
   const [search, setSearch] = useState("");
-  const [domainFilter, setDomainFilter] = useState("all");
-  const [pageSize, setPageSize] = useState(9);
   const [page, setPage] = useState(1);
   const [error, setError] = useState("");
   const [syncMessage, setSyncMessage] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const PAGE_SIZE = 9;
 
   useEffect(() => {
     const load = async () => {
@@ -150,38 +150,30 @@ export default function TeAmo({ onBack }: TeAmoProps) {
     await persistLinks(updated);
   };
 
-  const clearAll = async () => {
-    await persistLinks([]);
-  };
 
-  const domains = useMemo(
-    () => ["all", ...Array.from(new Set(links.map((item) => item.domain))).sort((a, b) => a.localeCompare(b))],
-    [links]
-  );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return links.filter((item) => {
-      const matchesDomain = domainFilter === "all" || item.domain === domainFilter;
       const matchesText =
         q.length === 0 ||
         item.url.toLowerCase().includes(q) ||
         item.title.toLowerCase().includes(q) ||
         item.note.toLowerCase().includes(q);
-      return matchesDomain && matchesText;
+      return matchesText;
     });
-  }, [links, search, domainFilter]);
+  }, [links, search]);
 
   useEffect(() => {
     setPage(1);
-  }, [search, domainFilter, pageSize]);
+  }, [search]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, totalPages);
   const paginated = useMemo(() => {
-    const start = (current - 1) * pageSize;
-    return filtered.slice(start, start + pageSize);
-  }, [filtered, current, pageSize]);
+    const start = (current - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, current]);
 
   return (
     <div className="te-amo-container">
@@ -195,49 +187,54 @@ export default function TeAmo({ onBack }: TeAmoProps) {
 
       <div className="gallery-section">
         <div className="gallery-upload">
-          <div className="url-input-wrapper">
-            <input
-              className="url-input"
-              type="text"
-              placeholder="https://..."
-              value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && void addLink()}
-            />
-            <button className="add-button" onClick={() => void addLink()}>
-              <Plus size={20} /> Añadir
-            </button>
-          </div>
+          <button 
+            className="add-button" 
+            onClick={() => setShowAddForm(!showAddForm)}
+            style={{ width: "100%", justifyContent: "center", gap: "0.5rem" }}
+          >
+            <ChevronDown size={20} style={{ transform: showAddForm ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }} /> 
+            Añadir enlace
+          </button>
 
-          <div className="url-input-wrapper">
-            <input
-              className="url-input"
-              type="text"
-              placeholder="Título (opcional)"
-              value={titleInput}
-              onChange={(e) => setTitleInput(e.target.value)}
-            />
+          {showAddForm && (
+            <>
+              <div className="url-input-wrapper">
+                <input
+                  className="url-input"
+                  type="text"
+                  placeholder="https://..."
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && void addLink()}
+                  autoFocus
+                />
+                <button className="add-button" onClick={() => void addLink()}>
+                  Guardar
+                </button>
+              </div>
 
-          </div>
+              <div className="url-input-wrapper">
+                <input
+                  className="url-input"
+                  type="text"
+                  placeholder="Título (opcional)"
+                  value={titleInput}
+                  onChange={(e) => setTitleInput(e.target.value)}
+                />
+              </div>
 
-          <textarea
-            className="url-input"
-            rows={3}
-            placeholder="Nota (opcional)"
-            value={noteInput}
-            onChange={(e) => setNoteInput(e.target.value)}
-          />
+              <textarea
+                className="url-input"
+                rows={3}
+                placeholder="Nota (opcional)"
+                value={noteInput}
+                onChange={(e) => setNoteInput(e.target.value)}
+              />
+            </>
+          )}
 
           {error && <p className="error-message">{error}</p>}
           {syncMessage && <p className="help-text">{syncMessage}</p>}
-
-          {links.length > 0 && (
-            <div className="gallery-actions">
-              <button className="clear-gallery-btn" onClick={() => void clearAll()}>
-                Limpiar todo
-              </button>
-            </div>
-          )}
         </div>
 
         <div className="gallery-filters">
@@ -253,19 +250,6 @@ export default function TeAmo({ onBack }: TeAmoProps) {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <select className="gallery-search-input" value={domainFilter} onChange={(e) => setDomainFilter(e.target.value)}>
-                {domains.map((domain) => (
-                  <option key={domain} value={domain}>
-                    {domain === "all" ? "Todos los dominios" : domain}
-                  </option>
-                ))}
-              </select>
-              <select className="gallery-search-input" value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}>
-                <option value={6}>6/página</option>
-                <option value={9}>9/página</option>
-                <option value={12}>12/página</option>
-                <option value={24}>24/página</option>
-              </select>
             </div>
           </div>
         </div>
