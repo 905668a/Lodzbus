@@ -35,7 +35,7 @@ interface RouteData {
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 const RECENT_PAST_WINDOW_MS = 10 * 60 * 1000;
 const RECENT_PAST_VISIBLE_MS = 5 * 60 * 1000;
-const VALID_LATE_MARGIN_MS = 1 * 60 * 1000;
+const VALID_LATE_MARGIN_MS = 3 * 60 * 1000;
 const STUDENT_DEPOT_ORIGIN_ADDRESS = "Student Depot Łódź, Stanisława Wigury 7 B, 90-301 Łódź";
 const ONE_MINUTE_MS = 60 * 1000;
 const DUPLICATE_ROUTE_WINDOW_MS = 5 * 60 * 1000;

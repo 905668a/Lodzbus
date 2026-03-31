@@ -6,6 +6,8 @@ html, body {
   background: transparent;
   color: inherit;
   font-family: "Roboto", "Montserrat", "Arial", sans-serif;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 #root {
