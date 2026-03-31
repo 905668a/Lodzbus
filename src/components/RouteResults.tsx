@@ -39,6 +39,7 @@ const VALID_LATE_MARGIN_MS = 3 * 60 * 1000;
 const STUDENT_DEPOT_ORIGIN_ADDRESS = "Student Depot Łódź, Stanisława Wigury 7 B, 90-301 Łódź";
 const ONE_MINUTE_MS = 60 * 1000;
 const DUPLICATE_ROUTE_WINDOW_MS = 5 * 60 * 1000;
+const MAX_WALK_TO_TIME_MINUTES = 15;
 
 interface RouteResultsProps {
   routeData: RouteData;
@@ -370,6 +371,11 @@ export default function RouteResults({ routeData, onBack }: RouteResultsProps) {
       const transportTime = option.transport.durationMinutes || transit?.transportTime || 12;
       const walkFromTime = walking?.walkFromTime ?? (option.walkFromStop.distance ? calculateWalkingTime(option.walkFromStop.distance) : 0);
       const totalTime = walkToTime + transportTime + walkFromTime;
+
+      // Skip routes that require too much walking to the stop
+      if (walkToTime > MAX_WALK_TO_TIME_MINUTES) {
+        continue;
+      }
 
       const key = bucketKey(option.line, option.departureStopId);
       const bucket = departureBuckets[key];
