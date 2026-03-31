@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ExternalLink, ImagePlus, Plus, Search, Trash2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Plus, Search, Trash2 } from "lucide-react";
 
 interface TeAmoProps {
   onBack: () => void;
@@ -16,7 +16,6 @@ interface NotebookLink {
 }
 
 const STORAGE_KEY = "lodz-bus:notebook-links";
-const LEGACY_EMBEDS_KEY = "lodz-bus:te-amo-embeds";
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const extractDomain = (value: string) => {
@@ -57,7 +56,6 @@ export default function TeAmo({ onBack }: TeAmoProps) {
   const [page, setPage] = useState(1);
   const [error, setError] = useState("");
   const [syncMessage, setSyncMessage] = useState("");
-  const [importingPins, setImportingPins] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -156,101 +154,6 @@ export default function TeAmo({ onBack }: TeAmoProps) {
     await persistLinks([]);
   };
 
-  const importPinterestFromLegacy = async () => {
-    setImportingPins(true);
-    setError("");
-    setSyncMessage("");
-
-    try {
-      const rawLegacy = localStorage.getItem(LEGACY_EMBEDS_KEY);
-      const parsed = rawLegacy ? JSON.parse(rawLegacy) : [];
-      const pinterestUrls = Array.isArray(parsed)
-        ? parsed
-            .map((entry: unknown) => {
-              const item = entry as { url?: string; type?: string };
-              if (typeof item?.url !== "string") return null;
-              const lowered = item.url.toLowerCase();
-              if (item.type === "pinterest" || lowered.includes("pinterest.com") || lowered.includes("pin.it")) {
-                return item.url;
-              }
-              return null;
-            })
-            .filter(Boolean) as string[]
-        : [];
-
-      const uniqueBoards = Array.from(new Set(pinterestUrls));
-      if (uniqueBoards.length === 0) {
-        setSyncMessage("No encontré links antiguos de Pinterest para importar.");
-        return;
-      }
-
-      const imageCandidates: string[] = [];
-      for (const boardUrl of uniqueBoards) {
-        try {
-          const response = await fetch(`${API_BASE}/api/pinterest-board-images?url=${encodeURIComponent(boardUrl)}&limit=60`);
-          if (!response.ok) continue;
-          const payload = await response.json();
-          const images = Array.isArray(payload?.images) ? payload.images : [];
-          for (const url of images) {
-            if (typeof url === "string") imageCandidates.push(url);
-          }
-        } catch {
-          // continue with next board
-        }
-      }
-
-      const dedupedImages = Array.from(new Set(imageCandidates));
-      if (dedupedImages.length === 0) {
-        setSyncMessage("No pude recuperar imágenes del contenido antiguo.");
-        return;
-      }
-
-      const existing = new Set(links.map((l) => l.url));
-      const imported: NotebookLink[] = [];
-
-      for (let i = 0; i < dedupedImages.length; i++) {
-        const sourceUrl = dedupedImages[i];
-        try {
-          const cachedResponse = await fetch(`${API_BASE}/api/cache-image`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url: sourceUrl }),
-          });
-
-          if (!cachedResponse.ok) continue;
-          const cached = await cachedResponse.json();
-          const cachedUrl = typeof cached?.cachedUrl === "string" ? cached.cachedUrl : "";
-          if (!cachedUrl || existing.has(cachedUrl)) continue;
-
-          existing.add(cachedUrl);
-          imported.push({
-            id: crypto.randomUUID(),
-            url: cachedUrl,
-            sourceUrl,
-            title: `Pinterest ${i + 1}`,
-            note: "Importada y guardada en servidor",
-            domain: extractDomain(cachedUrl),
-            createdAt: new Date().toISOString(),
-          });
-        } catch {
-          // continue importing
-        }
-      }
-
-      if (imported.length === 0) {
-        setSyncMessage("No había fotos nuevas para guardar (o hubo bloqueos de descarga).");
-        return;
-      }
-
-      await persistLinks([...imported, ...links]);
-      setSyncMessage(`✅ Importadas y guardadas ${imported.length} fotos de Pinterest.`);
-    } catch {
-      setError("No se pudo importar Pinterest ahora mismo.");
-    } finally {
-      setImportingPins(false);
-    }
-  };
-
   const domains = useMemo(
     () => ["all", ...Array.from(new Set(links.map((item) => item.domain))).sort((a, b) => a.localeCompare(b))],
     [links]
@@ -286,7 +189,7 @@ export default function TeAmo({ onBack }: TeAmoProps) {
         <button className="back-button-te-amo" onClick={onBack}>
           <ArrowLeft size={22} /> Volver
         </button>
-        <h1>📒 Tablero persistente</h1>
+        <h1>📒 Notas</h1>
         <div className="header-spacer" />
       </div>
 
@@ -314,9 +217,7 @@ export default function TeAmo({ onBack }: TeAmoProps) {
               value={titleInput}
               onChange={(e) => setTitleInput(e.target.value)}
             />
-            <button className="header-btn" onClick={() => void importPinterestFromLegacy()} disabled={importingPins}>
-              <ImagePlus size={16} /> {importingPins ? "Guardando..." : "Guardar Pinterest antiguo"}
-            </button>
+
           </div>
 
           <textarea

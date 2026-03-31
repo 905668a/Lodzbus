@@ -590,7 +590,6 @@ export default function RouteResults({ routeData, onBack }: RouteResultsProps) {
                             <div className="time-block highlight-arrive-stop">
                               <div className="time-label">Llegó a parada destino</div>
                               <div className="time-value">{formatTime(option.busArrivalTime)}</div>
-                              <div className="time-duration">Bajar y caminar {option.walkFromTime} min</div>
                             </div>
                             <div className="timeline-arrow">→</div>
                             <div className="time-block">
@@ -687,7 +686,6 @@ export default function RouteResults({ routeData, onBack }: RouteResultsProps) {
                         <div className="time-block highlight-arrive-stop">
                           <div className="time-label">Llega a parada destino</div>
                           <div className="time-value">{formatTime(option.busArrivalTime)}</div>
-                          <div className="time-duration">Bajar y caminar {option.walkFromTime} min</div>
                         </div>
                         <div className="timeline-arrow">→</div>
                         <div className="time-block">
@@ -782,7 +780,6 @@ export default function RouteResults({ routeData, onBack }: RouteResultsProps) {
                             <div className="time-block highlight-arrive-stop">
                               <div className="time-label">Llega a parada destino</div>
                               <div className="time-value">{formatTime(option.busArrivalTime)}</div>
-                              <div className="time-duration">Bajar y caminar {option.walkFromTime} min</div>
                             </div>
                             <div className="timeline-arrow">→</div>
                             <div className="time-block">
