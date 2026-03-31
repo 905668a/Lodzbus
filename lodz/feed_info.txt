@@ -1,0 +1,2 @@
+﻿feed_publisher_name,feed_publisher_url,feed_lang,feed_start_date,feed_end_date,feed_version,feed_contact_email,feed_contact_url
+"R&G PLUS Sp. z o.o.",http://www.rg.com.pl,pl,20260318,20261231,"11366_11367","municom@rg.com.pl",""
