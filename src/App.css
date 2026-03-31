@@ -1159,6 +1159,8 @@ h1 {
   .time-axis {
     justify-content: flex-start;
     overflow-x: auto;
+    display: flex;
+    flex-wrap: wrap;
   }
 
   .timeline-arrow {
@@ -2353,6 +2355,52 @@ h1 {
 
   .help-text {
     font-size: 0.75rem;
+  }
+
+  /* Time blocks in 2-column grid on small screens */
+  .time-axis {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+    width: 100%;
+    overflow: visible;
+    padding: 0;
+    flex-wrap: wrap;
+  }
+
+  .time-block {
+    min-width: 100%;
+    flex: 1;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .time-value {
+    font-size: 1.3rem;
+  }
+
+  .time-label {
+    font-size: 0.6rem;
+  }
+
+  .time-duration {
+    font-size: 0.65rem;
+    margin-top: 0.2rem;
+  }
+
+  .time-block.highlight-leave .time-value,
+  .time-block.highlight-pass .time-value,
+  .time-block.highlight-arrive-stop .time-value {
+    font-size: 1.2rem;
+  }
+
+  /* Hide timeline arrows on small screens */
+  .timeline-arrow {
+    display: none;
+  }
+
+  .timeline-column {
+    width: 100%;
   }
 }
 
