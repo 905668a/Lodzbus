@@ -1,0 +1,54 @@
+{
+  "name": "Łódź Bus Times",
+  "short_name": "Bus Times",
+  "description": "Ver tiempos de llegada de buses en tiempo real en Łódź con cálculo de tiempo de caminata",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%232563eb' width='192' height='192'/><text x='96' y='120' font-size='80' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'>🚌</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%232563eb' width='512' height='512'/><text x='256' y='380' font-size='280' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'>🚌</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%232563eb' width='192' height='192' rx='45'/><text x='96' y='120' font-size='80' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'>🚌</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'><rect fill='%23f8fafc' width='540' height='720'/><rect fill='%232563eb' width='540' height='100'/><text x='270' y='60' font-size='32' font-weight='bold' text-anchor='middle' fill='white'>Łódź Bus Times</text></svg>",
+      "sizes": "540x720",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    }
+  ],
+  "categories": ["transportation", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Buscar parada",
+      "short_name": "Buscar",
+      "description": "Abre la búsqueda de paradas",
+      "url": "/",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%232563eb' width='192' height='192'/><circle cx='80' cy='80' r='40' fill='none' stroke='white' stroke-width='16'/><line x1='120' y1='120' x2='160' y2='160' stroke='white' stroke-width='16'/></svg>",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ]
+}

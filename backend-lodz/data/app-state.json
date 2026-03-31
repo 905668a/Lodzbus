@@ -1,0 +1,13 @@
+{
+  "links": [
+    {
+      "id": "demo-2",
+      "url": "https://example.org",
+      "title": "Demo2",
+      "note": "sync test",
+      "domain": "example.org",
+      "createdAt": "2026-03-31T15:31:07.9524179+02:00"
+    }
+  ],
+  "updatedAt": "2026-03-31T13:31:07.963Z"
+}
