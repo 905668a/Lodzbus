@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ChevronDown, ExternalLink, Search, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, ChevronDown, Download, ExternalLink, Search, Trash2, Upload } from "lucide-react";
 
 interface TeAmoProps {
   onBack: () => void;
@@ -41,9 +41,29 @@ const safeDate = (iso: string) => {
   }
 };
 
-const isImageUrl = (value: string) => {
+const isImageUrl = (value: string, fileType?: string) => {
   const normalized = String(value || "").toLowerCase();
+  if (fileType?.startsWith("image/")) return true;
   return normalized.includes("/cached-images/") || /\.(jpg|jpeg|png|webp|gif|avif)(\?|$)/i.test(normalized);
+};
+
+const isVideoUrl = (value: string, fileType?: string) => {
+  if (fileType?.startsWith("video/")) return true;
+  const normalized = String(value || "").toLowerCase();
+  return /\.(mp4|webm|ogg|mov|avi|mkv)(\?|$)/i.test(normalized);
+};
+
+const isPdfUrl = (value: string, fileType?: string) => {
+  if (fileType === "application/pdf") return true;
+  return String(value || "").toLowerCase().endsWith(".pdf");
+};
+
+const getFileDisplayName = (url: string) => {
+  try {
+    return decodeURIComponent(url.split("/").pop() || "archivo");
+  } catch {
+    return url.split("/").pop() || "archivo";
+  }
 };
 
 export default function TeAmo({ onBack }: TeAmoProps) {
@@ -344,8 +364,30 @@ export default function TeAmo({ onBack }: TeAmoProps) {
 
                     <h3 style={{ color: "#fff", lineHeight: 1.25 }}>{item.title}</h3>
 
-                    {isImageUrl(item.url) && (
-                      <img src={item.url} alt={item.title} style={{ width: "100%", borderRadius: 10, border: "1px solid rgba(59,130,246,0.25)" }} loading="lazy" />
+                    {isImageUrl(item.url, item.fileType) && (
+                      <div style={{ position: "relative" }}>
+                        <img src={item.url} alt={item.title} style={{ width: "100%", borderRadius: 10, border: "1px solid rgba(59,130,246,0.25)", maxHeight: "300px", objectFit: "contain" }} loading="lazy" />
+                      </div>
+                    )}
+
+                    {isVideoUrl(item.url, item.fileType) && (
+                      <video controls style={{ width: "100%", borderRadius: 10, border: "1px solid rgba(59,130,246,0.25)", maxHeight: "300px" }}>
+                        <source src={item.url} type={item.fileType} />
+                        Tu navegador no soporta video.
+                      </video>
+                    )}
+
+                    {isPdfUrl(item.url, item.fileType) && (
+                      <iframe
+                        src={`${item.url}#toolbar=0`}
+                        title={item.title}
+                        style={{
+                          width: "100%",
+                          height: "400px",
+                          borderRadius: 10,
+                          border: "1px solid rgba(59,130,246,0.25)",
+                        }}
+                      />
                     )}
 
                     <p className="substack-url" style={{ maxWidth: "100%" }}>{item.url}</p>
@@ -354,9 +396,19 @@ export default function TeAmo({ onBack }: TeAmoProps) {
 
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
                       <span style={{ color: "#94a3b8", fontSize: "0.75rem" }}>{safeDate(item.createdAt)}</span>
-                      <a className="embed-link-button" href={item.url} target="_blank" rel="noreferrer">
-                        Abrir <ExternalLink size={14} />
-                      </a>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <a className="embed-link-button" href={item.url} target="_blank" rel="noreferrer">
+                          Abrir <ExternalLink size={14} />
+                        </a>
+                        <a 
+                          className="embed-link-button" 
+                          href={item.url} 
+                          download={getFileDisplayName(item.url)}
+                          style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}
+                        >
+                          <Download size={14} /> Descargar
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </article>
