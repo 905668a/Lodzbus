@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ChevronDown, ExternalLink, Search, Trash2 } from "lucide-react";
+import { ArrowLeft, ChevronDown, ExternalLink, Search, Trash2, Upload } from "lucide-react";
 
 interface TeAmoProps {
   onBack: () => void;
@@ -13,6 +13,7 @@ interface NotebookLink {
   note: string;
   domain: string;
   createdAt: string;
+  fileType?: string;
 }
 
 const STORAGE_KEY = "lodz-bus:notebook-links";
@@ -55,6 +56,7 @@ export default function TeAmo({ onBack }: TeAmoProps) {
   const [error, setError] = useState("");
   const [syncMessage, setSyncMessage] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const PAGE_SIZE = 9;
 
   useEffect(() => {
@@ -150,7 +152,51 @@ export default function TeAmo({ onBack }: TeAmoProps) {
     await persistLinks(updated);
   };
 
+  const uploadFile = async (file: File) => {
+    setError("");
+    setUploading(true);
 
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("fileName", titleInput.trim() || file.name);
+
+      const response = await fetch(`${API_BASE}/api/upload-file`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Error ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      const next: NotebookLink = {
+        id: crypto.randomUUID(),
+        url: data.fileUrl,
+        title: titleInput.trim() || file.name,
+        note: noteInput.trim(),
+        domain: "archivo",
+        createdAt: new Date().toISOString(),
+        fileType: file.type,
+      };
+
+      const updated = [next, ...links];
+      await persistLinks(updated);
+
+      setUrlInput("");
+      setTitleInput("");
+      setNoteInput("");
+      setSyncMessage("✅ Archivo subido correctamente.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error desconocido";
+      setError(`Error al subir: ${msg}`);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -230,6 +276,35 @@ export default function TeAmo({ onBack }: TeAmoProps) {
                 value={noteInput}
                 onChange={(e) => setNoteInput(e.target.value)}
               />
+
+              <div className="url-input-wrapper" style={{ marginTop: "1rem" }}>
+                <input
+                  type="file"
+                  className="url-input"
+                  id="file-upload"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    const file = e.currentTarget.files?.[0];
+                    if (file) {
+                      void uploadFile(file);
+                      e.currentTarget.value = "";
+                    }
+                  }}
+                  disabled={uploading}
+                />
+                <label htmlFor="file-upload" style={{ cursor: uploading ? "not-allowed" : "pointer" }}>
+                  <button
+                    className="add-button"
+                    type="button"
+                    onClick={() => document.getElementById("file-upload")?.click()}
+                    disabled={uploading}
+                    style={{ width: "100%", justifyContent: "center", gap: "0.5rem" }}
+                  >
+                    <Upload size={18} />
+                    {uploading ? "Subiendo..." : "Subir archivo/imagen"}
+                  </button>
+                </label>
+              </div>
             </>
           )}
 

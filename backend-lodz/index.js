@@ -8,6 +8,7 @@ const crypto = require("crypto");
 const axios = require("axios");
 const cheerio = require("cheerio");
 const xml2js = require("xml2js");
+const multer = require("multer");
 const gtfsRealtimeBindings = require("gtfs-realtime-bindings");
 
 dotenv.config();
@@ -27,16 +28,47 @@ app.use(express.json());
 const DATA_DIR = path.join(__dirname, "data");
 const APP_STATE_PATH = path.join(DATA_DIR, "app-state.json");
 const PINTEREST_CACHE_DIR = path.join(__dirname, "cache", "pinterest");
+const UPLOADED_FILES_DIR = path.join(__dirname, "uploaded-files");
 
-for (const dir of [DATA_DIR, PINTEREST_CACHE_DIR]) {
+for (const dir of [DATA_DIR, PINTEREST_CACHE_DIR, UPLOADED_FILES_DIR]) {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
 }
 
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => {
+      cb(null, UPLOADED_FILES_DIR);
+    },
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname);
+      const name = crypto.randomUUID();
+      cb(null, `${name}${ext}`);
+    },
+  }),
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max
+  fileFilter: (_req, file, cb) => {
+    const allowed = /\.(jpg|jpeg|png|gif|webp|pdf|doc|docx|xls|xlsx|txt|md)$/i;
+    if (allowed.test(path.extname(file.originalname))) {
+      cb(null, true);
+    } else {
+      cb(new Error("Tipo de archivo no permitido"));
+    }
+  },
+});
+
 app.use(
   "/cached-images",
   express.static(PINTEREST_CACHE_DIR, {
+    maxAge: "30d",
+    immutable: true,
+  })
+);
+
+app.use(
+  "/uploaded-files",
+  express.static(UPLOADED_FILES_DIR, {
     maxAge: "30d",
     immutable: true,
   })
@@ -1713,6 +1745,29 @@ app.get("/api/pinterest-rss-images", async (req, res) => {
 app.get("/api/app-state", (_req, res) => {
   const state = readAppState();
   return res.json(state);
+});
+
+app.post("/api/upload-file", upload.single("file"), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file provided" });
+    }
+
+    const fileUrl = `/uploaded-files/${req.file.filename}`;
+    const fileName = req.body.fileName || req.file.originalname;
+
+    return res.json({
+      success: true,
+      fileUrl,
+      fileName,
+      originalName: req.file.originalname,
+      mimeType: req.file.mimetype,
+      size: req.file.size,
+    });
+  } catch (error) {
+    console.error("File upload error:", error);
+    return res.status(500).json({ error: "Failed to upload file", detail: error?.message || "unknown" });
+  }
 });
 
 app.put("/api/app-state", (req, res) => {
